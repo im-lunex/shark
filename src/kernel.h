@@ -3,7 +3,7 @@
 
 #define VGA_ADDRESS 0xB8000
 
-#define WHITE_COLOR 15
+#define WHITE_COLOR 1
 
 typedef unsigned short UINT16;
 
