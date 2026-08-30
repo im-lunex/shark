@@ -5,7 +5,6 @@ isodir/
 *.bin
 *.iso
 *.nix
-*.c
 *.md
 *.txt
 *.sh
