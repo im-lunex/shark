@@ -1,0 +1,10 @@
+build/
+.cache/
+isodir/
+*.o
+*.bin
+*.iso
+*.nix
+*.c
+*.md
+*.txt
