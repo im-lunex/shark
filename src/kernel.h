@@ -3,7 +3,7 @@
 
 #define VGA_ADDRESS 0xB8000
 
-#define WHITE_COLOR 10
+#define WHITE_COLOR 15
 #define RED 0x0C
 #define RAND 10
 
