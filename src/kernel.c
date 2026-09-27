@@ -1,10 +1,21 @@
 #include "kernel.h"
 
 typedef unsigned char UINT8;
+typedef unsigned int UINT32;
 
 static UINT16 pos = 0;
 static int cur_pos_x = 0;
 static int cur_pos_y = 0;
+
+void
+scr_memsetw (UINT16 *dest, UINT16 val, UINT32 count)
+{
+	asm volatile ("cld\n\t"
+				  "rep stosw"
+				  : "+D"(dest), "+c"(count)
+				  : "a"(val)
+				  : "memory");
+}
 
 // set actual cursor position based on its expected position useing "_" for now
 void
@@ -28,36 +39,22 @@ set_cursor (int x, int y)
 	outb (0x3D5, (UINT8)((pos >> 8) & 0xFF));
 }
 
-// calculate cursor position
 void
-sync_cursor_with_buffer ()
+clear_screen (UINT8 color)
 {
-	static int last_frame = -1;
+	UINT16 blank = (UINT16)' ' | ((UINT16)color << 8);
+	scr_memsetw ((UINT16 *)VGA_ADDRESS, blank, 80 * 25);
 
-	for (int i = (80 * 25) - 1; i >= 0; i--)
-		{
-			char character = (char)(TERMINAL_BUFFER[i] & 0xFF);
+	cur_pos_x = 0;
+	cur_pos_y = 0;
 
-			if (character != ' ' && character != '\0')
-				{
-					last_frame = i;
-					break;
-				}
-		}
-
-	int next_index = last_frame + 1;
-	if (next_index >= 80 * 25)
-		{
-			next_index = (80 * 25) - 1;
-		}
-
-	set_cursor (next_index % 80, next_index / 80);
+	pos = 0;
+	set_cursor (0, 0);
 }
 
 void
 putchar (char ch, int color)
 {
-	TERMINAL_BUFFER[pos] = (UINT16)ch | (UINT16)color << 8;
 	if (ch == '\n')
 		{
 			cur_pos_x = 0;
@@ -69,7 +66,14 @@ putchar (char ch, int color)
 			TERMINAL_BUFFER[pos] = (UINT16)ch | (UINT16)color << 8;
 			cur_pos_x++;
 			pos++;
+			if (cur_pos_x >= 80)
+				{
+					cur_pos_x = 0;
+					cur_pos_y++;
+				}
 		}
+
+	set_cursor (cur_pos_x, cur_pos_y);
 }
 
 void
@@ -87,9 +91,8 @@ void
 KERNEL_MAIN (void)
 {
 	TERMINAL_BUFFER = (UINT16 *)VGA_ADDRESS;
-
-	char *welcome_msg = "Hello Shark\nSEX";
+	clear_screen (WHITE_COLOR);
+	char *welcome_msg = "HELO SHARK FOOD IN NEXTLINE\nFOOD";
 
 	print_text (welcome_msg, WHITE_COLOR);
-	sync_cursor_with_buffer ();
 }
